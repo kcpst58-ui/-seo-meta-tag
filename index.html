@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salary Tracker</title>
+  <meta name="description" content="ระบบติดตามเงินเดือนและรายจ่ายรายวัน ช่วยคุณวางแผนการเงินได้ง่ายขึ้นในชีวิตประจำวัน">
+  <meta name="keywords" content="เงินเดือน, บันทึกรายจ่าย, วางแผนการเงิน, บัญชีรายรับรายจ่าย, salary tracker">
+  <meta name="author" content="ทีมพัฒนา Salary Tracker">
+  <meta name="facebook-domain-verification" content="z93udkq5l09kzv95smgnnfd7sn7o9z" />
+  <meta name="google-site-verification" content="0u2_PFf0XHfr8Mal81c0Sr9tbSMG_Vsk58J7AvFO9jA" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Sarabun', sans-serif;
+      background-color: #f0f2f5;
+    }
+    nav {
+      background: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav a {
+      color: white;
+      margin: 0 1rem;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .page {
+      display: none;
+      padding: 2rem;
+    }
+    .active {
+      display: block;
+    }
+    input, button {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 100%;
+      font-size: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#" onclick="showPage('home')">ข้อมูลเงินเดือน</a>
+    <a href="#" onclick="showPage('status')">สถานะทางการเงิน</a>
+    <a href="#" onclick="showPage('daily')">รายจ่ายรายวัน</a>
+  </nav>
+
+  <div id="home" class="page active">
+    <h2>กรอกข้อมูลเงินเดือนและรายจ่ายประจำ</h2>
+    <label>เงินเดือน (บาท):</label>
+    <input type="number" id="income" placeholder="เช่น 20000">
+    <label>รายจ่ายประจำต่อเดือน (บาท):</label>
+    <input type="number" id="fixed" placeholder="เช่น 5000">
+    <button onclick="saveIncomeFixed()">บันทึกข้อมูล</button>
+  </div>
+
+  <div id="status" class="page">
+    <h2>สถานะทางการเงิน</h2>
+    <p id="statusText"></p>
+    <table>
+      <tr><th>รายการ</th><th>จำนวนเงิน (บาท)</th></tr>
+      <tr><td>เงินเดือนทั้งหมด</td><td id="remainAll"></td></tr>
+      <tr><td>หลังหักรายจ่ายประจำ</td><td id="remainFixed"></td></tr>
+      <tr><td>รายจ่ายทั่วไปวันนี้</td><td id="dailyTotal"></td></tr>
+      <tr><td>เงินสุทธิที่เหลือ</td><td id="remainFinal"></td></tr>
+    </table>
+  </div>
+
+  <div id="daily" class="page">
+    <h2>เพิ่มรายจ่ายรายวัน</h2>
+    <input type="number" id="dailyExpense" placeholder="เช่น 100">
+    <button onclick="addDailyExpense()">เพิ่มรายจ่าย</button>
+    <table id="dailyTable">
+      <thead>
+        <tr><th>#</th><th>จำนวน (บาท)</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    let income = 0;
+    let fixed = 0;
+    let dailyExpenses = [];
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      if (pageId === 'status') calculateStatus();
+      if (pageId === 'daily') updateDailyTable();
+    }
+
+    function saveIncomeFixed() {
+      income = parseFloat(document.getElementById('income').value) || 0;
+      fixed = parseFloat(document.getElementById('fixed').value) || 0;
+      alert('บันทึกข้อมูลแล้ว');
+    }
+
+    function calculateStatus() {
+      const dailyTotal = dailyExpenses.reduce((a, b) => a + b, 0);
+      const remainFixed = income - fixed;
+      const remainFinal = remainFixed - dailyTotal;
+
+      let status = '';
+      if (income < 10000) status = 'ชนชั้นล่าง';
+      else if (income < 25000) status = 'ชนชั้นกลางระดับล่าง';
+      else if (income < 50000) status = 'ชนชั้นกลาง';
+      else if (income < 100000) status = 'ชนชั้นกลางระดับสูง';
+      else status = 'ชนชั้นบน';
+
+      document.getElementById('statusText').innerHTML = `คุณอยู่ใน <strong>${status}</strong>`;
+      document.getElementById('remainAll').innerText = income.toLocaleString();
+      document.getElementById('remainFixed').innerText = remainFixed.toLocaleString();
+      document.getElementById('dailyTotal').innerText = dailyTotal.toLocaleString();
+      document.getElementById('remainFinal').innerText = remainFinal.toLocaleString();
+    }
+
+    function addDailyExpense() {
+      const amount = parseFloat(document.getElementById('dailyExpense').value);
+      if (!isNaN(amount)) {
+        dailyExpenses.push(amount);
+        document.getElementById('dailyExpense').value = '';
+        updateDailyTable();
+      }
+    }
+
+    function updateDailyTable() {
+      const tbody = document.querySelector('#dailyTable tbody');
+      tbody.innerHTML = '';
+      dailyExpenses.forEach((val, idx) => {
+        const row = `<tr><td>${idx + 1}</td><td>${val.toLocaleString()}</td></tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+  </script>
+</body>
+</html>
